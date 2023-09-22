@@ -5,13 +5,15 @@
 
 # Import necessary libraries
 import ctypes
+
+import numpy
 import pyrr
 import numpy as np
 import pygame as pg
 from OpenGL.GL import *
 import guiV1
 import shaderLoader
-from objLoaderV2 import ObjLoader
+from objLoaderV3 import ObjLoader
 
 # Initialize pygame
 pg.init()
@@ -54,8 +56,13 @@ offset_texture = size_position * 4
 n_vertices = len(obj.vertices) // (size_position + size_normal + size_texture)
 scale = 2.0 / dia
 aspect = width / height
-translate_mat1 = pyrr.matrix44.create_from_translation(-center)
-scaling_mat1 = pyrr.matrix44.create_from_scale([scale, scale, scale])
+identity_matrix = pyrr.matrix44.create_identity()
+up_vector = np.array([0, 1, 0])
+near_plane = 0.1
+far_plane = 1000
+eye = np.array([0, 0, dia])
+
+
 
 
 
@@ -83,17 +90,17 @@ glEnableVertexAttribArray(normal_loc)
 
 # Todo: Part 5: Configure uniform variables.
 
-aspect_loc = glGetUniformLocation(shader, "aspect")
-glUniform1f(aspect_loc, aspect)
 
 model_mat_loc = glGetUniformLocation(shader, "model_matrix")
+glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, identity_matrix)
+view_mat_loc = glGetUniformLocation(shader, "view_matrix")
+proj_mat_loc = glGetUniformLocation(shader, "projection_matrix")
 
 
 gui = guiV1.SimpleGUI("Transformations")
-sliderZ = gui.add_slider("RotateZ", -90, 90, 0)
 sliderY = gui.add_slider("RotateY", -180, 180, 0)
-sliderX = gui.add_slider("RotateX", -90, 90, 0)
-
+sliderX = gui.add_slider("RotateX", -180, 180, 0)
+sliderFov = gui.add_slider("fov", 30, 120, 45)
 
 
 # Todo: Part 6: Do the final rendering. In the rendering loop, do the following:
@@ -112,22 +119,22 @@ while draw:
 
     # Clear color buffer and depth buffer before drawing each frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    viewX_matrix = pyrr.matrix44.create_from_x_rotation(numpy.deg2rad(sliderX.get_value()))
+    viewY_matrix = pyrr.matrix44.create_from_y_rotation(numpy.deg2rad(sliderY.get_value()))
+    transformed_eye = eye - center
+    rotation_matrix = pyrr.matrix44.multiply(viewX_matrix, viewY_matrix)
+    rotated_eye = pyrr.matrix44.apply_to_vector(rotation_matrix, transformed_eye)
+    transformed_eye = rotated_eye + center
+    view_matrix = pyrr.matrix44.create_look_at(transformed_eye, center,up_vector)
+    fov = sliderFov.get_value()
+    projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(fov, aspect, near_plane, far_plane)
 
-    Zmatrix = pyrr.matrix44.create_from_z_rotation(np.deg2rad(sliderZ.get_value()))
-    Ymatrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
-    Xmatrix = pyrr.matrix44.create_from_x_rotation(np.deg2rad(sliderX.get_value()))
-
-    model_mat = pyrr.matrix44.multiply(translate_mat1, Xmatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, Ymatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, Zmatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, scaling_mat1)
-
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, model_mat)
+    glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, view_matrix)
+    glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, projection_matrix)
 
     glUseProgram(shader)
     glBindVertexArray(vao)
     glDrawArrays(GL_TRIANGLES, 0, n_vertices)
-
 
     # Refresh the display to show what's been drawn
     pg.display.flip()
