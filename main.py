@@ -40,7 +40,7 @@ glUseProgram(shader)
 
 # Todo: Part 1: Read the 3D model
 # Lets setup our scene geometry.
-obj = ObjLoader("objects/raymanModel.obj")
+obj = ObjLoader("objects/dragon.obj")
 vertices = np.array(obj.vertices, dtype="float32")
 center = obj.center
 dia = obj.dia
