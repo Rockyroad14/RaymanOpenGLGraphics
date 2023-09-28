@@ -4,8 +4,6 @@
 
 
 # Import necessary libraries
-import ctypes
-
 import numpy
 import pyrr
 import numpy as np
@@ -13,7 +11,7 @@ import pygame as pg
 from OpenGL.GL import *
 import guiV1
 import shaderLoader
-from objLoaderV3 import ObjLoader
+from objLoaderV4 import ObjLoader
 
 # Initialize pygame
 pg.init()
