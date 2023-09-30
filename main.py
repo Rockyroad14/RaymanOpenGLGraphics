@@ -136,18 +136,19 @@ while draw:
     # Creating the view and Projection Matrices
     rotation_y_matrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
     rotation_x_matrix = pyrr.matrix44.create_from_x_rotation(np.deg2rad(sliderX.get_value()))
-    rotation_eye_matrix = pyrr.matrix44.multiply(rotation_y_matrix, rotation_x_matrix)
+    rotation_eye_matrix = pyrr.matrix44.multiply(rotation_x_matrix, rotation_y_matrix)
     rotated_eye = pyrr.matrix44.apply_to_vector(rotation_eye_matrix, eye)
     view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up_vector)
     projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near_plane, far_plane)
 
-    # Drawing the Dragon to the right side of window
+    glUseProgram(dragon_shader)
+    # Drawing the Dragon to the left side of window
     glViewport(0, 0, width, height)
     glScissor(0, 0, width, height)
     glClearColor(0.3, 0.4, 0.5, 1.0)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    glUseProgram(dragon_shader)
+    glUniformMatrix4fv(dragon_model_mat_loc, 1, GL_FALSE, dragon_model_matrix)
     glUniformMatrix4fv(dragon_view_mat_loc, 1, GL_FALSE, view_matrix)
     glUniformMatrix4fv(dragon_proj_mat_loc, 1, GL_FALSE, projection_matrix)
 
@@ -161,6 +162,7 @@ while draw:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(raymon_shader)
+    glUniformMatrix4fv(rayman_model_mat_loc, 1, GL_FALSE, rayman_model_matrix)
     glUniformMatrix4fv(rayman_view_mat_loc, 1, GL_FALSE, view_matrix)
     glUniformMatrix4fv(rayman_proj_mat_loc, 1, GL_FALSE, projection_matrix)
 
