@@ -3,7 +3,6 @@
 # CAP 4720 Assignment 3
 
 # Import necessary libraries
-import numpy
 import pyrr
 import numpy as np
 import pygame as pg
@@ -35,7 +34,7 @@ glEnable(GL_SCISSOR_TEST)
 
 dragon_shader = shaderLoader.compile_shader(vs='shaders/vert.glsl', fs="shaders/frag.glsl")
 glUseProgram(dragon_shader)
-raymon_shader = shaderLoader.compile_shader(vs='shaders/vert.glsl', fs='shaders/frag2.glsl')
+raymon_shader = shaderLoader.compile_shader(vs='shaders/vert2.glsl', fs='shaders/frag2.glsl')
 glUseProgram(raymon_shader)
 
 # Todo: Part 1: Read the 3D model
@@ -51,15 +50,13 @@ dragon_vertices = np.array(dragon_obj.vertices, dtype="float32")
 rayman_scale = 2 / rayman_obj.dia
 dragon_scale = 2 / dragon_obj.dia
 aspect = width / height
-identity_matrix = pyrr.matrix44.create_identity()
 rayman_translate_matrix = pyrr.matrix44.create_from_translation(-rayman_obj.center)
 dragon_translate_matrix = pyrr.matrix44.create_from_translation(-dragon_obj.center)
 rayman_scale_matrix = pyrr.matrix44.create_from_scale([rayman_scale, rayman_scale, rayman_scale])
 dragon_scale_matrix = pyrr.matrix44.create_from_scale([dragon_scale, dragon_scale, dragon_scale])
-rayman_model_matrix = pyrr.matrix44.multiply(identity_matrix, rayman_translate_matrix)
-rayman_model_matrix = pyrr.matrix44.multiply(rayman_model_matrix, rayman_scale_matrix)
-dragon_model_matrix = pyrr.matrix44.multiply(identity_matrix, dragon_translate_matrix)
-dragon_model_matrix = pyrr.matrix44.multiply(dragon_model_matrix, dragon_scale_matrix)
+rayman_model_matrix = pyrr.matrix44.multiply(rayman_translate_matrix, rayman_scale_matrix)
+dragon_model_matrix = pyrr.matrix44.multiply(dragon_translate_matrix, dragon_scale_matrix)
+
 up_vector = np.array([0, 1, 0])
 near_plane = 0.1
 far_plane = 1000
@@ -86,7 +83,7 @@ glEnableVertexAttribArray(dragon_normal_loc)
 # -------------------------------------------------------------------------
 # Rayman Object------------------------------------------------------------
 vao2 = glGenVertexArrays(1)
-glBindVertexArray(vao)
+glBindVertexArray(vao2)
 
 vbo2 = glGenBuffers(1)
 glBindBuffer(GL_ARRAY_BUFFER, vbo2)
@@ -136,6 +133,7 @@ while draw:
     # Clear color buffer and depth buffer before drawing each frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+    # Creating the view and Projection Matrices
     rotation_y_matrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
     rotation_x_matrix = pyrr.matrix44.create_from_x_rotation(np.deg2rad(sliderX.get_value()))
     rotation_eye_matrix = pyrr.matrix44.multiply(rotation_y_matrix, rotation_x_matrix)
@@ -143,19 +141,32 @@ while draw:
     view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up_vector)
     projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near_plane, far_plane)
 
+    # Drawing the Dragon to the right side of window
     glViewport(0, 0, width, height)
     glScissor(0, 0, width, height)
     glClearColor(0.3, 0.4, 0.5, 1.0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(dragon_shader)
-    glUniformMatrix4fv()
-
-
-
+    glUniformMatrix4fv(dragon_view_mat_loc, 1, GL_FALSE, view_matrix)
+    glUniformMatrix4fv(dragon_proj_mat_loc, 1, GL_FALSE, projection_matrix)
 
     glUseProgram(dragon_shader)
     glBindVertexArray(vao)
     glDrawArrays(GL_TRIANGLES, 0, dragon_obj.n_vertices)
+    # ----------------------------------------------------------------------------------
+    glViewport(width, 0, width, height)
+    glScissor(width, 0, width, height)
+    glClearColor(0.2, 0.3, 0.4, 1.0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    glUseProgram(raymon_shader)
+    glUniformMatrix4fv(rayman_view_mat_loc, 1, GL_FALSE, view_matrix)
+    glUniformMatrix4fv(rayman_proj_mat_loc, 1, GL_FALSE, projection_matrix)
+
+    glUseProgram(raymon_shader)
+    glBindVertexArray(vao2)
+    glDrawArrays(GL_TRIANGLES, 0, rayman_obj.n_vertices)
 
     # Refresh the display to show what's been drawn
     pg.display.flip()
@@ -164,7 +175,8 @@ while draw:
 # Cleanup
 glDeleteVertexArrays(1, [vao, vao2])
 glDeleteBuffers(1, [vbo, vbo2])
-glDeleteProgram([dragon_shader, raymon_shader])
+glDeleteProgram(dragon_shader)
+glDeleteProgram(raymon_shader)
 
 pg.quit()   # Close the graphics window
 quit()      # Exit the program
