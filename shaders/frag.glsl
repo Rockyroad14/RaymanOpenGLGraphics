@@ -1,6 +1,10 @@
 #version 330 core
 
 in vec3 fragNormal;
+in vec3 frag_pos;
+
+uniform vec3 material_color;
+uniform vec3 specular_color;
 
 out vec4 outColor;
 

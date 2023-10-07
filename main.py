@@ -44,12 +44,16 @@ scale = 2 / obj.dia
 point_light = np.array([2, 2, 2, 1])
 directional_light = np.array([2, 2, 2, 0])
 ambient_intensity = 0.25
-
 scaling_matrix = pyrr.matrix44.create_from_scale([scale, scale, scale])
 translate_matrix = pyrr.matrix44.create_from_translation(-obj.center)
 # Definitions for Uniform Variable setup and Input Variables
-
+eye = np.array([0, 0, 2])
+up = np.array([0, 1, 0])
+look_at = np.array([0, 0, 0])
 aspect = 2 * width / height
+materialColor = (1.0, 0.1, 0.1)
+near = 0.1
+far = 10
 
 
 
@@ -91,19 +95,20 @@ glEnableVertexAttribArray(normal_loc)
 
 # Todo: Part 5: Configure uniform variables.
 
-aspect_loc = glGetUniformLocation(shader, "aspect")
-glUniform1f(aspect_loc, aspect)
-
+proj_mat_loc = glGetUniformLocation(shader, "projection_matrix")
 model_mat_loc = glGetUniformLocation(shader, "model_matrix")
-
+view_mat_loc = glGetUniformLocation(shader, "view_matrix")
+material_loc = glGetUniformLocation(shader, "material_color")
+spec_loc = glGetUniformLocation(shader, "specular_color")
 
 gui = guiV2.SimpleGUI("Transformations")
-sliderY = gui.add_slider("RotateY", -180, 180, 0)
-sliderX = gui.add_slider("RotateX", -90, 90, 0)
-sliderFov = gui.add_slider("fov", 45, 120, 90)
+sliderY = gui.add_slider("RotateY", -180, 180, 0, 1)
+sliderX = gui.add_slider("RotateX", -90, 90, 0, 1)
+sliderFov = gui.add_slider("fov", 45, 120, 90, 1)
 sliderShine = gui.add_slider("shininess", 1, 128, 32, 1)
 sliderK_s = gui.add_slider("K_s", 0, 1, 0.5, 0.01)
-materialPicker = gui.add_color_picker("material color", )
+materialPicker = gui.add_color_picker("material color", initial_color=materialColor)
+lightPicker = gui.add_radio_buttons("light type", options_dict={"point":1, "directional":0}, initial_option="point")
 
 
 # Todo: Part 6: Do the final rendering. In the rendering loop, do the following:
@@ -123,16 +128,16 @@ while draw:
     # Clear color buffer and depth buffer before drawing each frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-
     Ymatrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
     Xmatrix = pyrr.matrix44.create_from_x_rotation(np.deg2rad(sliderX.get_value()))
+    rotation_mat = pyrr.matrix44.multiply(Xmatrix, Ymatrix)
+    rotated_eye = pyrr.matrix44.apply_to_vector(rotation_mat, eye)
 
-    model_mat = pyrr.matrix44.multiply(translate_mat1, Xmatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, Ymatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, Zmatrix)
-    model_mat = pyrr.matrix44.multiply(model_mat, scaling_mat1)
+    view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up)
+    projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near, far)
 
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, model_mat)
+
+
 
     glUseProgram(shader)
     glBindVertexArray(vao)
