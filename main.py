@@ -10,7 +10,7 @@ import numpy as np
 import pygame as pg
 from OpenGL.GL import *
 import guiV2
-import shaderLoaderV2
+import shaderLoaderV3
 from objLoaderV4 import ObjLoader
 
 # Initialize pygame
@@ -33,7 +33,7 @@ glEnable(GL_DEPTH_TEST)
 
 # Todo: Part 3: Write shaders (vertex and fragment shaders) and compile them here
 
-shader = shaderLoaderV2.compile_shader(vs='shaders/vert.glsl', fs="shaders/frag.glsl")
+shader = shaderLoaderV3.compile_shader(vs='shaders/vert.glsl', fs="shaders/frag.glsl")
 glUseProgram(shader)
 
 # Todo: Part 1: Read the 3D model
@@ -48,6 +48,9 @@ scaling_matrix = pyrr.matrix44.create_from_scale([scale, scale, scale])
 translate_matrix = pyrr.matrix44.create_from_translation(-obj.center - np.array([obj.dia, 0, 0]))
 translate_matrix2 = pyrr.matrix44.create_from_translation(-obj.center)
 translate_matrix3 = pyrr.matrix44.create_from_translation(-obj.center + np.array([obj.dia, 0, 0]))
+model_matrix1 = pyrr.matrix44.multiply(scaling_matrix, translate_matrix)
+model_matrix2 = pyrr.matrix44.multiply(scaling_matrix, translate_matrix2)
+model_matrix3 = pyrr.matrix44.multiply(scaling_matrix, translate_matrix3)
 # Definitions for Uniform Variable setup and Input Variables
 eye = np.array([0, 0, 2])
 up = np.array([0, 1, 0])
@@ -92,6 +95,7 @@ view_mat_loc = glGetUniformLocation(shader, "view_matrix")
 material_loc = glGetUniformLocation(shader, "material_color")
 spec_loc = glGetUniformLocation(shader, "specular_color")
 
+
 gui = guiV2.SimpleGUI("Transformations")
 sliderY = gui.add_slider("RotateY", -180, 180, 0, 1)
 sliderX = gui.add_slider("RotateX", -90, 90, 0, 1)
@@ -99,8 +103,8 @@ sliderFov = gui.add_slider("fov", 45, 120, 90, 1)
 sliderShine = gui.add_slider("shininess", 1, 128, 32, 1)
 sliderK_s = gui.add_slider("K_s", 0, 1, 0.5, 0.01)
 materialPicker = gui.add_color_picker("material color", initial_color=materialColor)
-specularPicker = gui.add_color_picker("Specular Color", initial_color=)
-lightPicker = gui.add_radio_buttons("light type", options_dict={"point":1, "directional":0}, initial_option="point")
+specularPicker = gui.add_color_picker("Specular Color", initial_color=(1, 1, 1))
+lightPicker = gui.add_radio_buttons("light type", options_dict={"point": 1, "directional": 0}, initial_option="point")
 
 
 # Todo: Part 6: Do the final rendering. In the rendering loop, do the following:
@@ -120,6 +124,7 @@ while draw:
     # Clear color buffer and depth buffer before drawing each frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+    # Creating Rotation and rotated eye matrixes
     Ymatrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
     Xmatrix = pyrr.matrix44.create_from_x_rotation(np.deg2rad(sliderX.get_value()))
     rotation_mat = pyrr.matrix44.multiply(Xmatrix, Ymatrix)
@@ -127,8 +132,11 @@ while draw:
 
     view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up)
     projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near, far)
+    shader["view_matrix"] = view_matrix
+    shader["projection_matrix"] = projection_matrix
+    shader
 
-
+    shader["model_matrix"] = model_matrix1
 
 
     glUseProgram(shader)
