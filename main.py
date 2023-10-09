@@ -45,7 +45,9 @@ point_light = np.array([2, 2, 2, 1])
 directional_light = np.array([2, 2, 2, 0])
 ambient_intensity = 0.25
 scaling_matrix = pyrr.matrix44.create_from_scale([scale, scale, scale])
-translate_matrix = pyrr.matrix44.create_from_translation(-obj.center)
+translate_matrix = pyrr.matrix44.create_from_translation(-obj.center - np.array([obj.dia, 0, 0]))
+translate_matrix2 = pyrr.matrix44.create_from_translation(-obj.center)
+translate_matrix3 = pyrr.matrix44.create_from_translation(-obj.center + np.array([obj.dia, 0, 0]))
 # Definitions for Uniform Variable setup and Input Variables
 eye = np.array([0, 0, 2])
 up = np.array([0, 1, 0])
@@ -67,17 +69,6 @@ vbo = glGenBuffers(1)
 glBindBuffer(GL_ARRAY_BUFFER, vbo)
 glBufferData(GL_ARRAY_BUFFER, size=obj.vertices.nbytes, data=obj.vertices, usage=GL_STATIC_DRAW)
 
-vao2 = glGenVertexArrays(1)
-glBindVertexArray(vao2)
-vbo2 = glGenBuffers(1)
-glBindBuffer(GL_ARRAY_BUFFER, vbo2)
-glBufferData(GL_ARRAY_BUFFER, size=obj.vertices.nbytes, data=obj.vertices, usage=GL_STATIC_DRAW)
-
-vao3 = glGenVertexArrays(1)
-glBindVertexArray(vao3)
-vbo3 = glGenVertexArrays(1)
-glBindBuffer(GL_ARRAY_BUFFER, vbo3)
-glBufferData(GL_ARRAY_BUFFER, size=obj.vertices.nbytes, data=obj.vertices, usage=GL_STATIC_DRAW)
 
 
 
@@ -108,6 +99,7 @@ sliderFov = gui.add_slider("fov", 45, 120, 90, 1)
 sliderShine = gui.add_slider("shininess", 1, 128, 32, 1)
 sliderK_s = gui.add_slider("K_s", 0, 1, 0.5, 0.01)
 materialPicker = gui.add_color_picker("material color", initial_color=materialColor)
+specularPicker = gui.add_color_picker("Specular Color", initial_color=)
 lightPicker = gui.add_radio_buttons("light type", options_dict={"point":1, "directional":0}, initial_option="point")
 
 
@@ -141,7 +133,7 @@ while draw:
 
     glUseProgram(shader)
     glBindVertexArray(vao)
-    glDrawArrays(GL_TRIANGLES, 0, n_vertices)
+    glDrawArrays(GL_TRIANGLES, 0, obj.n_vertices)
 
 
     # Refresh the display to show what's been drawn
