@@ -5,6 +5,7 @@ in vec3 frag_pos;
 
 uniform vec3 material_color;
 uniform vec3 specular_color;
+uniform vec3 eye_pos;
 
 out vec4 outColor;
 
