@@ -6,10 +6,36 @@ out vec4 outColor;
 uniform vec3 material_color;
 uniform vec4 light_pos;
 uniform vec3 eye_pos;
-uniform int shininess;
-uniform vec3 specular_color;
 uniform float ambient_intensity;
-uniform float K_s;
+uniform bool silhouette;
+uniform int toon;
+
+vec3 silhouetteEdge(vec3 color)
+{
+    if (silhouette)
+    {
+        vec3 view_dir = normalize(eye_pos - frag_pos);
+        if(dot(fragNormal, view_dir) < 0.2)
+        {
+            color = vec3(0, 0, 0);
+        }
+    }
+
+    return color;
+}
+
+vec3 toonShading(vec3 light_dir)
+{
+    float intensity = clamp(dot(light_dir, fragNormal), 0, 1);
+    int n = 5;
+    float step = sqrt(intensity) * n;
+    intensity = (floor(step) + smoothstep(0.48, 0.52, fract(step))) / n;
+    intensity = intensity * intensity;
+    vec3 color = material_color * intensity;
+    color = silhouetteEdge(color);
+    return color;
+}
+
 
 
 void main(){
@@ -19,19 +45,14 @@ void main(){
     vec3 light_dir;
     if (light_pos.w==0.0)   light_dir = normalize(light_pos.xyz);                   // directional light
     else                    light_dir = normalize(light_pos.xyz-frag_pos);      // point light
-    vec3 color_diffuse_reflection = material_color * clamp(dot(normal, light_dir), 0, 1);
+    vec3 color = material_color * clamp(dot(normal, light_dir), 0, 1);
 
-    //Specular
-    vec3 view_dir = normalize(eye_pos - frag_pos);
-    vec3 half_vector = normalize(light_dir + view_dir);
-    vec3 color_specular_reflection = specular_color * pow(clamp(dot(normal, half_vector), 0, 1), shininess);
+    if(toon == 2)
+    {
+        color = toonShading(light_dir);
+    }
 
-    //combo of diffuse and specular
-    vec3 color_ambient_light = ambient_intensity * material_color;
-    vec3 color = color_ambient_light + color_diffuse_reflection + K_s * color_specular_reflection;
-
-
-    outColor = vec4(color, 1.0 );
+    outColor = vec4(color, 1.0);
 }
 
 

@@ -9,7 +9,7 @@ import pyrr
 import numpy as np
 import pygame as pg
 from OpenGL.GL import *
-import guiV2
+import guiV3
 from shaderLoaderV3 import ShaderProgram
 from objLoaderV4 import ObjLoader
 
@@ -45,12 +45,8 @@ point_light = np.array([2, 2, 2, 1])
 directional_light = np.array([2, 2, 2, 0])
 ambient_intensity = 0.25
 scaling_matrix = pyrr.matrix44.create_from_scale([scale, scale, scale])
-translate_matrix = pyrr.matrix44.create_from_translation(-obj.center - np.array([obj.dia, 0, 0]))
 translate_matrix2 = pyrr.matrix44.create_from_translation(-obj.center)
-translate_matrix3 = pyrr.matrix44.create_from_translation(-obj.center + np.array([obj.dia, 0, 0]))
-model_matrix1 = pyrr.matrix44.multiply(translate_matrix, scaling_matrix)
 model_matrix2 = pyrr.matrix44.multiply(translate_matrix2, scaling_matrix)
-model_matrix3 = pyrr.matrix44.multiply(translate_matrix3, scaling_matrix)
 # Definitions for Uniform Variable setup and Input Variables
 eye = np.array([0, 0, 2])
 up = np.array([0, 1, 0])
@@ -92,15 +88,15 @@ glEnableVertexAttribArray(normal_loc)
 
 
 
-gui = guiV2.SimpleGUI("Transformations")
+gui = guiV3.SimpleGUI("Transformations")
 sliderY = gui.add_slider("RotateY", -180, 180, 0, 1)
 sliderX = gui.add_slider("RotateX", -90, 90, 0, 1)
 sliderFov = gui.add_slider("fov", 45, 120, 90, 1)
-sliderShine = gui.add_slider("shininess", 1, 128, 32, 1)
-sliderK_s = gui.add_slider("K_s", 0, 1, 0.5, 0.01)
 materialPicker = gui.add_color_picker("material color", initial_color=materialColor)
-specularPicker = gui.add_color_picker("Specular Color", initial_color=(1, 1, 1))
-lightPicker = gui.add_radio_buttons("light type", options_dict={"point": 1, "directional": 0}, initial_option="point")
+lightPicker = gui.add_radio_buttons("light type", options_dict={"point": 1, "directional": 2}, initial_option="point")
+shaderPicker = gui.add_radio_buttons("Shading type", options_dict={"Diffuse": 1, "Toon Shading": 2}, initial_option="Diffuse")
+sillCheckbox = gui.add_checkbox("Silhouette", initial_state=True)
+
 
 
 # Todo: Part 6: Do the final rendering. In the rendering loop, do the following:
@@ -119,6 +115,7 @@ while draw:
 
     # Clear color buffer and depth buffer before drawing each frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glUseProgram(shader.shader)
 
     # Creating Rotation and rotated eye matrixes
     Ymatrix = pyrr.matrix44.create_from_y_rotation(np.deg2rad(sliderY.get_value()))
@@ -133,51 +130,20 @@ while draw:
     else:
         light_val = directional_light
 
-
-    shader["view_matrix"] = view_matrix
-    shader["projection_matrix"] = projection_matrix
-    shader["model_matrix"] = model_matrix1
-    shader["shininess"] = sliderShine.get_value()
-    shader["K_s"] = sliderK_s.get_value()
-    shader["specular_color"] = (0, 0, 0)
-    shader["material_color"] = materialPicker.get_color()
-    shader["light_pos"] = light_val
-    shader["eye_pos"] = eye
-    shader["ambient_intensity"] = ambient_intensity
-
-    glUseProgram(shader.shader)
-    glBindVertexArray(vao)
-    glDrawArrays(GL_TRIANGLES, 0, obj.n_vertices)
-
     shader["view_matrix"] = view_matrix
     shader["projection_matrix"] = projection_matrix
     shader["model_matrix"] = model_matrix2
-    shader["shininess"] = sliderShine.get_value()
-    shader["K_s"] = sliderK_s.get_value()
-    shader["specular_color"] = specularPicker.get_color()
-    shader["material_color"] = (0, 0, 0)
-    shader["light_pos"] = light_val
-    shader["eye_pos"] = eye
-    shader["ambient_intensity"] = ambient_intensity
-
-    glUseProgram(shader.shader)
-    glBindVertexArray(vao)
-    glDrawArrays(GL_TRIANGLES, 0, obj.n_vertices)
-
-    shader["view_matrix"] = view_matrix
-    shader["projection_matrix"] = projection_matrix
-    shader["model_matrix"] = model_matrix3
-    shader["shininess"] = sliderShine.get_value()
-    shader["K_s"] = sliderK_s.get_value()
-    shader["specular_color"] = specularPicker.get_color()
     shader["material_color"] = materialPicker.get_color()
     shader["light_pos"] = light_val
-    shader["eye_pos"] = eye
+    shader["eye_pos"] = rotated_eye
     shader["ambient_intensity"] = ambient_intensity
+    shader["silhouette"] = bool(sillCheckbox.get_value())
+    shader["toon"] = int(shaderPicker.get_value())
 
     glUseProgram(shader.shader)
     glBindVertexArray(vao)
     glDrawArrays(GL_TRIANGLES, 0, obj.n_vertices)
+
 
     # Refresh the display to show what's been drawn
     pg.display.flip()
