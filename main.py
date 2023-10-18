@@ -4,7 +4,6 @@
 
 
 # Import necessary libraries
-import ctypes
 import pyrr
 import numpy as np
 import pygame as pg
