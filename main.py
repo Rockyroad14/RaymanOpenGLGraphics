@@ -1,6 +1,6 @@
 # Name: Jared Reich
 # ID: 4672917
-# CAP 4720 Assignment 3
+# CAP 4720 Assignment 9
 
 
 # Import necessary libraries
@@ -71,6 +71,8 @@ glBufferData(GL_ARRAY_BUFFER, size=obj.vertices.nbytes, data=obj.vertices, usage
 
 
 
+
+
 # Todo: Part 4: Configure vertex attributes using the variables defined in Part 1
 
 position_loc = glGetAttribLocation(shader.shader, "position")
@@ -91,10 +93,7 @@ gui = guiV3.SimpleGUI("Transformations")
 sliderY = gui.add_slider("RotateY", -180, 180, 0, 1)
 sliderX = gui.add_slider("RotateX", -90, 90, 0, 1)
 sliderFov = gui.add_slider("fov", 45, 120, 90, 1)
-materialPicker = gui.add_color_picker("material color", initial_color=materialColor)
-lightPicker = gui.add_radio_buttons("light type", options_dict={"point": 1, "directional": 2}, initial_option="point")
-shaderPicker = gui.add_radio_buttons("Shading type", options_dict={"Diffuse": 1, "Toon Shading": 2}, initial_option="Diffuse")
-sillCheckbox = gui.add_checkbox("Silhouette", initial_state=True)
+shaderPicker = gui.add_radio_buttons("Texture Type", options_dict={"Environment mapping": 1, "2D texture": 2, "Mix": 3}, initial_option="Diffuse")
 
 
 
@@ -124,20 +123,14 @@ while draw:
 
     view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up)
     projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near, far)
-    if lightPicker.get_value() == 1:
-        light_val = point_light
-    else:
-        light_val = directional_light
+
 
     shader["view_matrix"] = view_matrix
     shader["projection_matrix"] = projection_matrix
     shader["model_matrix"] = model_matrix2
     shader["material_color"] = materialPicker.get_color()
-    shader["light_pos"] = light_val
     shader["eye_pos"] = rotated_eye
     shader["ambient_intensity"] = ambient_intensity
-    shader["silhouette"] = bool(sillCheckbox.get_value())
-    shader["toon"] = int(shaderPicker.get_value())
 
     glUseProgram(shader.shader)
     glBindVertexArray(vao)
