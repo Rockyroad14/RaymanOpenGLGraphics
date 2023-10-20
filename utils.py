@@ -12,6 +12,7 @@ def load_cubemap_texture(filenames):
     # Generate a texture ID
     texture_id = glGenTextures(1)
 
+    glActiveTexture(GL_TEXTURE1)
     # Bind the texture as a cubemap
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id)
 
@@ -36,6 +37,6 @@ def load_cubemap_texture(filenames):
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
 
     # Unbind the texture
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 1)
 
     return texture_id

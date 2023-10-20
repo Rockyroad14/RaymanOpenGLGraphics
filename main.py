@@ -80,8 +80,11 @@ glEnableVertexAttribArray(position_loc)
 texture_loc = glGetAttribLocation(shader.shader, "uv")
 glVertexAttribPointer(index=texture_loc, size=obj.size_texture, type=GL_FLOAT, normalized=GL_FALSE, stride=obj.stride, pointer=ctypes.c_void_p(obj.offset_texture))
 glEnableVertexAttribArray(texture_loc)
-
+normal_loc = glGetAttribLocation(shader.shader, "normal")
+glVertexAttribPointer(index=normal_loc, size=obj.size_normal, type=GL_FLOAT, normalized=GL_FALSE, stride=obj.stride, pointer=ctypes.c_void_p(obj.offset_normal))
+glEnableVertexAttribArray(normal_loc)
 # Todo: Part 5: Configure uniform variables.
+
 
 img_texture, img_width, img_height = load_image("objects/stormtrooper.jpg", flip=True)
 cubemap_id = load_cubemap_texture(cubemap_images)
@@ -90,6 +93,7 @@ cubemap_id = load_cubemap_texture(cubemap_images)
 
 
 texture_id = glGenTextures(1)
+glActiveTexture(GL_TEXTURE0)
 glBindTexture(GL_TEXTURE_2D, texture_id)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -137,15 +141,20 @@ while draw:
     view_matrix = pyrr.matrix44.create_look_at(rotated_eye, look_at, up)
     projection_matrix = pyrr.matrix44.create_perspective_projection_matrix(sliderFov.get_value(), aspect, near, far)
 
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+
+    glActiveTexture(GL_TEXTURE1)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_id)
+
     shader["tex"] = 0
+    shader["cubeMapTex"] = 1
     shader["view_matrix"] = view_matrix
     shader["projection_matrix"] = projection_matrix
     shader["model_matrix"] = model_matrix
     shader["eye_pos"] = rotated_eye
     shader["ambient_intensity"] = ambient_intensity
-
-    glActiveTexture(GL_TEXTURE0)
-    glBindTexture(GL_TEXTURE_2D, texture_id)
+    shader["textype"] = int(texturePicker.get_value())
 
     glUseProgram(shader.shader)
     glBindVertexArray(vao)
