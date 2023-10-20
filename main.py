@@ -11,7 +11,7 @@ from OpenGL.GL import *
 import guiV3
 from shaderLoaderV3 import ShaderProgram
 from objLoaderV4 import ObjLoader
-from utils import load_image
+from utils import load_image, load_cubemap_texture
 
 # Initialize pygame
 pg.init()
@@ -54,6 +54,9 @@ look_at = np.array([0, 0, 0])
 aspect = 2 * width / height
 near = 0.1
 far = 10
+cubemap_images = ["skybox/right.png", "skybox/left.png",
+                  "skybox/top.png", "skybox/bottom.png",
+                  "skybox/front.png", "skybox/back.png"]
 
 
 
@@ -69,10 +72,6 @@ glBufferData(GL_ARRAY_BUFFER, size=obj.vertices.nbytes, data=obj.vertices, usage
 
 
 
-
-
-
-
 # Todo: Part 4: Configure vertex attributes using the variables defined in Part 1
 
 position_loc = glGetAttribLocation(shader.shader, "position")
@@ -84,7 +83,10 @@ glEnableVertexAttribArray(texture_loc)
 
 # Todo: Part 5: Configure uniform variables.
 
-img_data, img_width, img_height = load_image("objects/stormtrooper.jpg", flip=True)
+img_texture, img_width, img_height = load_image("objects/stormtrooper.jpg", flip=True)
+cubemap_id = load_cubemap_texture(cubemap_images)
+
+
 
 
 texture_id = glGenTextures(1)
@@ -94,7 +96,7 @@ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_texture)
 glGenerateMipmap(GL_TEXTURE_2D)
 
 
