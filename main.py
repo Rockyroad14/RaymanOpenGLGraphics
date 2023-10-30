@@ -145,10 +145,13 @@ def render_scene():
     shaderProgram_scene["projection_matrix"] = projection_mat
     shaderProgram_scene["material_color"] = material_color_slider.get_color()
     shaderProgram_scene["light_pos"] = rotated_lightPos
+    shaderProgram_scene["light_projection_matrix"] = light_projection_mat
+    shaderProgram_scene["light_view_matrix"] = light_view_mat
 
     # todo: activate the texture units and bind the textures to them
-
-
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, depthTex_id)
+    shaderProgram_scene["depthTex"] = 0
 
     # todo: make draw calls for the object:
     # send model matrix as uniform for the object, bind the vao and draw the object
@@ -158,7 +161,10 @@ def render_scene():
 
     # todo: make draw calls for the receiver.
     # send model matrix as uniform for the receiver, bind the vao and draw the receiver
-
+    shaderProgram_scene["model_matrix"] = model_mat_receiver
+    glUseProgram(shaderProgram_scene.shader)
+    glBindVertexArray(vao_receiver)
+    glDrawArrays(GL_TRIANGLES, 0, obj_receiver.n_vertices)
 
 
 

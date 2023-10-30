@@ -28,7 +28,8 @@ void main(){
     float z_current = fragPos3D.z;
     float z_depthTex = texture(depthTex, fragPos3D.xy).r;
 
-    if(z_current > z_depthTex)
+    float bias = max(0.0005f * (1.0 - dot(fragNormal, light_dir)), 0.0001f);
+    if(z_current - bias > z_depthTex)
     {
         outColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
