@@ -140,7 +140,11 @@ def render_scene():
 
     # todo: configure all the uniforms for the scene shader
     # example: shaderProgram_scene["viewMatrix"] = view_mat
-
+    shaderProgram_scene["model_matrix"] = model_mat_obj
+    shaderProgram_scene["view_matrix"] = view_mat
+    shaderProgram_scene["projection_matrix"] = projection_mat
+    shaderProgram_scene["material_color"] = material_color_slider.get_color()
+    shaderProgram_scene["light_pos"] = rotated_lightPos
 
     # todo: activate the texture units and bind the textures to them
 
@@ -148,10 +152,13 @@ def render_scene():
 
     # todo: make draw calls for the object:
     # send model matrix as uniform for the object, bind the vao and draw the object
-
+    glUseProgram(shaderProgram_scene.shader)
+    glBindVertexArray(vao_obj)
+    glDrawArrays(GL_TRIANGLES, 0, obj.n_vertices)
 
     # todo: make draw calls for the receiver.
     # send model matrix as uniform for the receiver, bind the vao and draw the receiver
+
 
 
 
@@ -272,6 +279,7 @@ near = 0.1
 far = 20
 
 lightPos = [1, 4, 1]
+lightPosition = [1, 4, 1, 1]
 # **************************************************************************************************************
 # **************************************************************************************************************
 
