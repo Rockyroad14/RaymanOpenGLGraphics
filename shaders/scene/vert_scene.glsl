@@ -2,7 +2,6 @@
 
 // Attributes
 layout (location = 0) in vec3 position;    // we can also use layout to specify the location of the attribute
-layout (location = 1) in vec2 uv;
 layout (location = 2) in vec3 normal;
 
 
@@ -27,7 +26,5 @@ void main(){
     mat4 normal_matrix = transpose(inverse(model_matrix));
     vec3 new_normal = (normal_matrix * vec4(normal, 0)).xyz;
     fragNormal = normalize(new_normal);
-
-    fragPosLightSpace = light_projection_matrix * light_view_matrix * model_matrix * vec4(position, 1.0);
 
 }
